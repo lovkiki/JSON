@@ -1,14 +1,8 @@
-package Gizmo;
-
 import java.util.ArrayList;
 import java.util.List;
 
-
 /**
- * @描述 Magic code
- * @创建人 易志鹏
- * @创建时间 2016年11月15日 下午3:18:31
- * @version
+ * @Author lovkiki
  */
 public class JSON_Object {
 	public String name;
