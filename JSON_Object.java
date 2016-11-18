@@ -92,7 +92,7 @@ public class JSON_Object {
 		return selectObj(selector).val;
 	}
 
-	private JSON_Object selectObj(String selector) {
+	public JSON_Object selectObj(String selector) {
 		if (!selector.contains(".") && !selector.contains("["))
 			return searchByName(selector);
 		JSON_Object obj = this;
