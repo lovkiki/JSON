@@ -10,24 +10,41 @@ public class JSON_Object {
 	public String val;
 	public List<JSON_Object> objArr;
 
-	public static JSON_Object Build(String json) {
+	private static int level = 0;
+
+	private static File debugFile = new File("C:\\Users\\acer e\\Desktop\\debug.txt");
+	private static FileWriter fw;
+	static {
+		try {
+			fw = new FileWriter(debugFile);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+
+	public static JSON_Object Build(String json) throws IOException {
+		level++;
 		json = deDeco(deSpace(json));
+		fw.write(level + " " + json + " " + json.length() + "\n");
 		JSON_Object self = new JSON_Object();
 		self.objArr = new ArrayList<>();
 		char[] cs = json.toCharArray();
 		int cursor = 0;
 		for (int i = 0; i < cs.length; i++) {
+			// fw.write(i + " " + cs[i] + "\n");
 			if (cs[i] == '{') {
 				int t = findEnd(json.substring(cursor, json.length()), '{', '}');
 				String[] parts = new String[2];
 				String cut = json.substring(cursor, cursor + t + 1);
+				if (cut.startsWith(","))
+					cut = cut.substring(1, cut.length());
+				fw.write("cut:" + cut + "\n");
 				if (cut.startsWith("{")) {
 					JSON_Object tObj = Build(cut);
 					self.objArr.add(tObj);
 					i = cursor + t;
 					while (i < json.length() && cs[i] != ',')
 						i++;
-					i++;
 					if (i > json.length())
 						break;
 					cursor = i;
@@ -37,15 +54,16 @@ public class JSON_Object {
 				parts[1] = cut.substring(cut.indexOf(':') + 1, cut.length());
 				JSON_Object tObj = Build(parts[1]);
 				tObj.name = deDecoStr(deSpace(parts[0]));
+				System.out.println("set name: " + tObj.name + " cs[i]: " + cs[i]);
 				self.objArr.add(tObj);
 				i = cursor + t;
 				while (i < json.length() && cs[i] != ',')
 					i++;
-				i++;
-				if (i > json.length())
+				if (i >= json.length())
 					break;
 				cursor = i;
 			} else if (cs[i] == '[') {
+				fw.write("Jump caused by '['\n");
 				int t = findEnd(json.substring(cursor, json.length()), '[', ']');
 				String cut = json.substring(cursor, cursor + t + 1);
 				int cutI = cut.indexOf(':');
@@ -55,6 +73,8 @@ public class JSON_Object {
 				} else {
 					String[] parts = new String[2];
 					parts[0] = cut.substring(0, cutI);
+					if (parts[0].startsWith("{"))
+						parts[0] = parts[0].substring(1, parts[0].length());
 					parts[1] = cut.substring(cutI + 1, cut.length());
 					tObj = Build(parts[1]);
 					tObj.name = deDecoStr(deSpace(parts[0]));
@@ -64,9 +84,11 @@ public class JSON_Object {
 				while (i < json.length() && cs[i] != ',')
 					i++;
 				i++;
-				if (i > json.length())
+				if (i >= json.length())
 					break;
 				cursor = i;
+				if(cs[i] == '[')
+					i--;
 			} else if (cs[i] == ',' || i >= cs.length - 1) {
 				JSON_Object tObj = new JSON_Object();
 				String[] parts = json.substring(cursor, i + 1).split(":");
@@ -76,12 +98,17 @@ public class JSON_Object {
 					tObj.name = deDecoStr(deSpace(parts[0]));
 					tObj.val = deDecoStr(deSpace(parts[1]));
 				}
+				fw.write("Final: " + tObj.name + " " + tObj.val + "\n");
 				self.objArr.add(tObj);
 				cursor = i + 1;
 				if (cursor > json.length())
 					break;
 			}
+			// else {
+			// fw.write(" **pass** " + cs[i] + " ");
+			// }
 		}
+		level--;
 		return self;
 	}
 
